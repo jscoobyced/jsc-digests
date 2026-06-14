@@ -14,7 +14,7 @@ python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 cp .env.example .env
-# then edit .env and fill in OPENAI_BASE_URL and OPENAI_API_KEY
+# then edit .env and fill in OPENAI_BASE_URL, OPENAI_API_KEY AND HF_TOKEN
 ```
 
 ## Run
