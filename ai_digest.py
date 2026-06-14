@@ -51,7 +51,9 @@ def http_get(url: str, *, user_agent: str, timeout: int) -> str:
 
 def extract_main_text(html: str) -> str:
     soup = BeautifulSoup(html, "html.parser")
-    for tag in soup(["script", "style", "noscript", "nav", "footer", "header", "aside", "form"]):
+    for tag in soup(
+        ["script", "style", "noscript", "nav", "footer", "header", "aside", "form"]
+    ):
         tag.decompose()
     container = soup.find("article") or soup.find("main") or soup.body or soup
     text = container.get_text(separator="\n", strip=True)
@@ -63,7 +65,7 @@ def extract_links(html: str, base_url: str) -> list[dict[str, str]]:
     seen: set[str] = set()
     links: list[dict[str, str]] = []
     for a in soup.find_all("a", href=True):
-        href = a["href"].strip()
+        href = str(a["href"]).strip()
         if not href or href.startswith(("#", "javascript:", "mailto:")):
             continue
         absolute = urljoin(base_url, href)
@@ -89,10 +91,13 @@ def llm_pick_links(
     max_picks: int,
     timeout: int,
 ) -> list[dict[str, str]]:
-    listing = "\n".join(f"- {l['title']} :: {l['url']}" for l in links)[:LINK_LIST_CHAR_LIMIT]
+    listing = "\n".join(f"- {l['title']} :: {l['url']}" for l in links)[
+        :LINK_LIST_CHAR_LIMIT
+    ]
     system = (
         "You select the top news/article links most relevant to AI, LLMs, or ML "
         "from a scraped link list. Skip navigation, login, tag pages, and unrelated content. "
+        "Avoid paywalled sites (e.g., WSJ, NYT, etc.) and prioritize freely accessible news sources. "
         "Respond with strict JSON only."
     )
     user = (
@@ -103,7 +108,10 @@ def llm_pick_links(
     )
     resp = client.chat.completions.create(
         model=model,
-        messages=[{"role": "system", "content": system}, {"role": "user", "content": user}],
+        messages=[
+            {"role": "system", "content": system},
+            {"role": "user", "content": user},
+        ],
         response_format={"type": "json_object"},
         timeout=timeout,
     )
@@ -134,11 +142,15 @@ def llm_summarize_article(
     )
     resp = client.chat.completions.create(
         model=model,
-        messages=[{"role": "system", "content": system}, {"role": "user", "content": user}],
+        messages=[
+            {"role": "system", "content": system},
+            {"role": "user", "content": user},
+        ],
         response_format={"type": "json_object"},
         max_tokens=max_tokens,
         timeout=timeout,
     )
+
     raw = resp.choices[0].message.content or "{}"
     data = json.loads(raw)
     return FetchedArticle(
@@ -170,8 +182,12 @@ def process_source(
     if stype == "article":
         text = extract_main_text(html)
         article = llm_summarize_article(
-            client, model=model, url=url, text=text,
-            max_tokens=max_tokens, timeout=llm_timeout,
+            client,
+            model=model,
+            url=url,
+            text=text,
+            max_tokens=max_tokens,
+            timeout=llm_timeout,
         )
         return [article]
 
@@ -180,7 +196,10 @@ def process_source(
     if not links:
         print(f"[{name}] no usable links found", file=sys.stderr)
         return []
-    print(f"[{name}] {len(links)} candidate links — asking LLM to pick top {cfg['fetch']['max_articles_per_entry_point']}", file=sys.stderr)
+    print(
+        f"[{name}] {len(links)} candidate links — asking LLM to pick top {cfg['fetch']['max_articles_per_entry_point']}",
+        file=sys.stderr,
+    )
     picks = llm_pick_links(
         client,
         model=model,
@@ -199,8 +218,12 @@ def process_source(
             ahtml = http_get(purl, user_agent=user_agent, timeout=http_timeout)
             atext = extract_main_text(ahtml)
             article = llm_summarize_article(
-                client, model=model, url=purl, text=atext,
-                max_tokens=max_tokens, timeout=llm_timeout,
+                client,
+                model=model,
+                url=purl,
+                text=atext,
+                max_tokens=max_tokens,
+                timeout=llm_timeout,
             )
             articles.append(article)
         except Exception as e:
@@ -234,7 +257,11 @@ def render_article_markdown(source_name: str, article: FetchedArticle) -> str:
     return "\n".join(out).rstrip() + "\n"
 
 
-def render_index(today: str, written: list[tuple[str, list[tuple[FetchedArticle, Path]]]], date_root: Path) -> str:
+def render_index(
+    today: str,
+    written: list[tuple[str, list[tuple[FetchedArticle, Path]]]],
+    date_root: Path,
+) -> str:
     out: list[str] = [f"# AI Digest — {today}", ""]
     for source_name, items in written:
         out.append(f"## {source_name}")
@@ -255,7 +282,10 @@ def main() -> int:
     base_url = os.environ.get("OPENAI_BASE_URL")
     api_key = os.environ.get("OPENAI_API_KEY")
     if not base_url or not api_key:
-        print("ERROR: set OPENAI_BASE_URL and OPENAI_API_KEY (in env or .env)", file=sys.stderr)
+        print(
+            "ERROR: set OPENAI_BASE_URL and OPENAI_API_KEY (in env or .env)",
+            file=sys.stderr,
+        )
         return 2
 
     cfg = load_config()
@@ -268,7 +298,7 @@ def main() -> int:
 
     today = date.today().isoformat()
     out_root = Path(cfg["output"]["dir"]).expanduser().resolve()
-    date_root = out_root / today
+    date_root = out_root / today / "md"
     date_root.mkdir(parents=True, exist_ok=True)
 
     written: list[tuple[str, list[tuple[FetchedArticle, Path]]]] = []

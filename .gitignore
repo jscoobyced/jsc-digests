@@ -1,1 +1,5 @@
 .env
+uv.lock
+
+digests/*
+!digests/.gitkeep

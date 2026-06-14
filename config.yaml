@@ -1,5 +1,5 @@
 llm:
-  model: "gpt-4o-mini"
+  model: "llama-3-1"
   max_tokens_per_summary: 400
   request_timeout_s: 60
 
@@ -21,29 +21,29 @@ sources:
   - name: "Hugging Face Daily Papers"
     url: "https://huggingface.co/papers"
     type: entry_point
-    enabled: true
+    enabled: false
 
   - name: "Anthropic News"
     url: "https://www.anthropic.com/news"
     type: entry_point
-    enabled: true
+    enabled: false
 
   - name: "OpenAI Blog"
     url: "https://openai.com/news/"
     type: entry_point
-    enabled: true
+    enabled: false
 
   - name: "Google DeepMind Blog"
     url: "https://deepmind.google/discover/blog/"
     type: entry_point
-    enabled: true
+    enabled: false
 
   - name: "Simon Willison's Blog"
     url: "https://simonwillison.net/"
     type: entry_point
-    enabled: true
+    enabled: false
 
   - name: "arXiv cs.AI recent"
     url: "https://arxiv.org/list/cs.AI/recent"
     type: entry_point
-    enabled: true
+    enabled: false

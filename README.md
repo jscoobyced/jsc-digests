@@ -10,9 +10,9 @@ narrates each article to audio using
 
 ```bash
 cd ai-digest
-python3 -m venv .venv
+uv venv
 source .venv/bin/activate
-pip install -r requirements.txt
+uv sync
 cp .env.example .env
 # then edit .env and fill in OPENAI_BASE_URL, OPENAI_API_KEY AND HF_TOKEN
 ```
@@ -20,7 +20,7 @@ cp .env.example .env
 ## Run
 
 ```bash
-python ai_digest.py
+uv run ai_digest.py
 ```
 
 Output layout (relative to the `output.dir` in `config.yaml`, default
@@ -72,9 +72,9 @@ huggingface-cli download SparkAudio/Spark-TTS-0.5B \
     --local-dir pretrained_models/Spark-TTS-0.5B
 
 # 3. Install Spark-TTS deps (large — torch, transformers, etc.) and ours
-pip install -r requirements.txt
+uv pip install -r requirements.txt
 cd -   # back to ai-digest
-pip install -r requirements-tts.txt
+uv pip install -r requirements-tts.txt
 
 # 4. Tell tts_digest.py where the repo and model live
 export SPARK_TTS_PATH=./Spark-TTS
@@ -102,7 +102,7 @@ skipped.
 
 Notes:
 
-- `pip install -r requirements-tts.txt` only installs the small extras
+- `uv pip install -r requirements-tts.txt` only installs the small extras
   this script needs (`torch`, `soundfile`, `huggingface_hub`); the heavy
   Spark-TTS deps come from `~/Spark-TTS/requirements.txt`.
 - Apple Silicon: the script picks MPS automatically. CUDA is used when

@@ -11,12 +11,6 @@ Setup (one-time):
        cd ./Spark-TTS && mkdir -p pretrained_models
        huggingface-cli download SparkAudio/Spark-TTS-0.5B \
            --local-dir pretrained_models/Spark-TTS-0.5B
-  3. Install Spark-TTS deps + this script's deps:
-       pip install -r ./Spark-TTS/requirements.txt
-       pip install -r requirements-tts.txt
-  4. Tell this script where Spark-TTS lives:
-       export SPARK_TTS_PATH=./Spark-TTS
-       export SPARK_TTS_MODEL_DIR=$SPARK_TTS_PATH/pretrained_models/Spark-TTS-0.5B
 
 Usage:
   python tts_digest.py                    # process today's digest
@@ -32,6 +26,9 @@ import re
 import sys
 from datetime import date
 from pathlib import Path
+from dotenv import load_dotenv
+
+load_dotenv()
 
 import numpy as np
 import soundfile as sf
@@ -56,9 +53,11 @@ def pick_device() -> torch.device:
 
 
 def import_spark_tts():
-    spark_path = os.environ.get("SPARK_TTS_PATH")
+    spark_path = os.environ["SPARK_TTS_PATH"]
     if not spark_path:
-        print("ERROR: set SPARK_TTS_PATH to your cloned Spark-TTS repo", file=sys.stderr)
+        print(
+            "ERROR: set SPARK_TTS_PATH to your cloned Spark-TTS repo", file=sys.stderr
+        )
         sys.exit(2)
     spark_path = str(Path(spark_path).expanduser().resolve())
     if spark_path not in sys.path:
@@ -120,10 +119,23 @@ def synthesize(model, text: str, *, device: torch.device):
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Convert digest markdown to audio with Spark-TTS-0.5B")
-    parser.add_argument("date", nargs="?", default=None, help="Digest date in YYYY-MM-DD (default: today)")
-    parser.add_argument("--root", default=None, help="Override the digest date folder explicitly")
-    parser.add_argument("--force", action="store_true", help="Re-generate audio even if .wav already exists")
+    parser = argparse.ArgumentParser(
+        description="Convert digest markdown to audio with Spark-TTS-0.5B"
+    )
+    parser.add_argument(
+        "date",
+        nargs="?",
+        default=None,
+        help="Digest date in YYYY-MM-DD (default: today)",
+    )
+    parser.add_argument(
+        "--root", default=None, help="Override the digest date folder explicitly"
+    )
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Re-generate audio even if .wav already exists",
+    )
     args = parser.parse_args()
 
     if args.root:
@@ -137,9 +149,12 @@ def main() -> int:
         print(f"No markdown files found under {date_root}", file=sys.stderr)
         return 1
 
-    model_dir = os.environ.get("SPARK_TTS_MODEL_DIR")
+    model_dir = os.environ["SPARK_TTS_MODEL_DIR"]
     if not model_dir:
-        print("ERROR: set SPARK_TTS_MODEL_DIR to the Spark-TTS-0.5B model directory", file=sys.stderr)
+        print(
+            "ERROR: set SPARK_TTS_MODEL_DIR to the Spark-TTS-0.5B model directory",
+            file=sys.stderr,
+        )
         return 2
 
     SparkTTS = import_spark_tts()
@@ -149,7 +164,13 @@ def main() -> int:
 
     n_done = 0
     for md_path in md_files:
-        wav_path = md_path.with_suffix(".wav")
+        wav_path = (
+            date_root
+            / "wav"
+            / md_path.parent.name
+            / md_path.name.replace(".md", ".wav")
+        )
+        wav_path.parent.mkdir(parents=True, exist_ok=True)
         if wav_path.exists() and not args.force:
             print(f"skip (exists): {wav_path}")
             continue
