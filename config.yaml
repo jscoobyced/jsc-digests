@@ -1,0 +1,49 @@
+llm:
+  model: "gpt-4o-mini"
+  max_tokens_per_summary: 400
+  request_timeout_s: 60
+
+fetch:
+  user_agent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36"
+  http_timeout_s: 30
+  max_articles_per_entry_point: 6
+
+output:
+  dir: "./digests/"
+  filename_format: "{date}.md"
+
+sources:
+  - name: "Hacker News front page"
+    url: "https://news.ycombinator.com/"
+    type: entry_point
+    enabled: true
+
+  - name: "Hugging Face Daily Papers"
+    url: "https://huggingface.co/papers"
+    type: entry_point
+    enabled: true
+
+  - name: "Anthropic News"
+    url: "https://www.anthropic.com/news"
+    type: entry_point
+    enabled: true
+
+  - name: "OpenAI Blog"
+    url: "https://openai.com/news/"
+    type: entry_point
+    enabled: true
+
+  - name: "Google DeepMind Blog"
+    url: "https://deepmind.google/discover/blog/"
+    type: entry_point
+    enabled: true
+
+  - name: "Simon Willison's Blog"
+    url: "https://simonwillison.net/"
+    type: entry_point
+    enabled: true
+
+  - name: "arXiv cs.AI recent"
+    url: "https://arxiv.org/list/cs.AI/recent"
+    type: entry_point
+    enabled: true
